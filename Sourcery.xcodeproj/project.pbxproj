@@ -108,6 +108,8 @@
 		CDE812ED1E1127FF00F1FF97 /* Sourcery+PerformanceSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDE812EC1E1127FF00F1FF97 /* Sourcery+PerformanceSpec.swift */; };
 		CDE812EF1E112CC700F1FF97 /* Performance-Code in Resources */ = {isa = PBXBuildFile; fileRef = CDE812EE1E112CC700F1FF97 /* Performance-Code */; };
 		CDF5E71D1E671B8500664763 /* TypedSpec.generated.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDF5E71C1E671B8500664763 /* TypedSpec.generated.swift */; };
+		DE41BCD623A7C9FA00F26966 /* ImportDeclarationsParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE41BCD523A7C9FA00F26966 /* ImportDeclarationsParser.swift */; };
+		DE41BCEC23A7F94D00F26966 /* ImportDeclarationsParserSpec.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE41BCEB23A7F94D00F26966 /* ImportDeclarationsParserSpec.swift */; };
 		E291D00F3B27A346A9ACCDA4 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = E291D5CD7EEDC70CB423C0BE /* Extensions.swift */; };
 		E291D1C26BD65C6E109966AF /* CustomMatchers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E291D139206162204C48F396 /* CustomMatchers.swift */; };
 		E291D33EA3BB6FC777B3950E /* FolderWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = E291DBAA16ABFED8C04CB42A /* FolderWatcher.swift */; };
@@ -332,6 +334,8 @@
 		CDF5E71C1E671B8500664763 /* TypedSpec.generated.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TypedSpec.generated.swift; sourceTree = "<group>"; };
 		CDF68B731E1C137E007C5396 /* Typed.stencil */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Typed.stencil; sourceTree = "<group>"; };
 		D0C82AE0D8342A0606F1E8CE /* Pods_SourceryJS.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SourceryJS.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE41BCD523A7C9FA00F26966 /* ImportDeclarationsParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDeclarationsParser.swift; sourceTree = "<group>"; };
+		DE41BCEB23A7F94D00F26966 /* ImportDeclarationsParserSpec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportDeclarationsParserSpec.swift; sourceTree = "<group>"; };
 		E291D04C9425FA502B37895D /* Type+Stencil.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Type+Stencil.swift"; sourceTree = "<group>"; };
 		E291D0D4A5AF091CD15550FD /* StencilTemplateSpec.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StencilTemplateSpec.swift; sourceTree = "<group>"; };
 		E291D139206162204C48F396 /* CustomMatchers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CustomMatchers.swift; sourceTree = "<group>"; };
@@ -662,6 +666,7 @@
 				B5BCFA0E21D1623D009DF652 /* InlineParser.swift */,
 				B5BCFA0F21D1623D009DF652 /* AnnotationsParser.swift */,
 				CDAB7CFB231E412C00ED8A32 /* Time.swift */,
+				DE41BCD523A7C9FA00F26966 /* ImportDeclarationsParser.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -795,6 +800,7 @@
 				0906124C1E2BC43500BA0937 /* FileParser + MethodsSpec.swift */,
 				6359E6641FE409250015AF8F /* FileParser+SubscriptsSpec.swift */,
 				E291DA3CE0BD58D0BF35138C /* VerifierSpec.swift */,
+				DE41BCEB23A7F94D00F26966 /* ImportDeclarationsParserSpec.swift */,
 			);
 			path = Parsing;
 			sourceTree = "<group>";
@@ -1596,6 +1602,7 @@
 				CDAB7CFC231E412C00ED8A32 /* Time.swift in Sources */,
 				B5BCFA1321D1623D009DF652 /* FileParser.swift in Sources */,
 				B5BCFA1221D1623D009DF652 /* Template.swift in Sources */,
+				DE41BCD623A7C9FA00F26966 /* ImportDeclarationsParser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1647,6 +1654,7 @@
 				E291D00F3B27A346A9ACCDA4 /* Extensions.swift in Sources */,
 				52F79EA11EE9F017006D3546 /* ConfigurationSpec.swift in Sources */,
 				E291D52FDFF7CF446E239C13 /* TemplateAnnotationsParserSpec.swift in Sources */,
+				DE41BCEC23A7F94D00F26966 /* ImportDeclarationsParserSpec.swift in Sources */,
 				E291D5115BBE9AB32275F38F /* VerifierSpec.swift in Sources */,
 				6359E6651FE409250015AF8F /* FileParser+SubscriptsSpec.swift in Sources */,
 				6393BC92201B50910044E8CC /* JavaScriptTemplateSpecs.swift in Sources */,

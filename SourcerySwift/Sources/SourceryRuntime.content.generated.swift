@@ -280,6 +280,7 @@ import Foundation
                          typealiases: [Typealias] = [],
                          attributes: [String: Attribute] = [:],
                          annotations: [String: NSObject] = [:],
+                         importDeclarations: [String] = [],
                          isGeneric: Bool = false) {
         super.init(
             name: name,
@@ -293,6 +294,7 @@ import Foundation
             containedTypes: containedTypes,
             typealiases: typealiases,
             annotations: annotations,
+            importDeclarations: importDeclarations,
             isGeneric: isGeneric
         )
     }
@@ -2934,6 +2936,7 @@ public typealias SourceryProtocol = Protocol
                          typealiases: [Typealias] = [],
                          attributes: [String: Attribute] = [:],
                          annotations: [String: NSObject] = [:],
+                         importDeclarations: [String] = [],
                          isGeneric: Bool = false) {
         super.init(
             name: name,
@@ -2947,6 +2950,7 @@ public typealias SourceryProtocol = Protocol
             containedTypes: containedTypes,
             typealiases: typealiases,
             annotations: annotations,
+            importDeclarations: importDeclarations,
             isGeneric: isGeneric
         )
     }
@@ -3004,6 +3008,7 @@ import Foundation
                          typealiases: [Typealias] = [],
                          attributes: [String: Attribute] = [:],
                          annotations: [String: NSObject] = [:],
+                         importDeclarations: [String] = [],
                          isGeneric: Bool = false) {
         super.init(
             name: name,
@@ -3017,6 +3022,7 @@ import Foundation
             containedTypes: containedTypes,
             typealiases: typealiases,
             annotations: annotations,
+            importDeclarations: importDeclarations,
             isGeneric: isGeneric
         )
     }
@@ -3624,6 +3630,9 @@ import Foundation
     /// Superclass type, if known (only for classes)
     public var supertype: Type?
 
+    /// Import declarations defined in the file where this type is declared
+    public var importDeclarations: [String]
+
     /// Type attributes, i.e. `@objc`
     public var attributes: [String: Attribute]
 
@@ -3649,6 +3658,7 @@ import Foundation
                 typealiases: [Typealias] = [],
                 attributes: [String: Attribute] = [:],
                 annotations: [String: NSObject] = [:],
+                importDeclarations: [String] = [],
                 isGeneric: Bool = false) {
 
         self.localName = name
@@ -3664,6 +3674,7 @@ import Foundation
         self.parentName = parent?.name
         self.attributes = attributes
         self.annotations = annotations
+        self.importDeclarations = importDeclarations
         self.isGeneric = isGeneric
 
         super.init()
@@ -3716,6 +3727,7 @@ import Foundation
             self.parentName = aDecoder.decode(forKey: "parentName")
             self.parent = aDecoder.decode(forKey: "parent")
             self.supertype = aDecoder.decode(forKey: "supertype")
+            guard let importDeclarations: [String] = aDecoder.decode(forKey: "importDeclarations") else { NSException.raise(NSExceptionName.parseErrorException, format: "Key '%@' not found.", arguments: getVaList(["importDeclarations"])); fatalError() }; self.importDeclarations = importDeclarations
             guard let attributes: [String: Attribute] = aDecoder.decode(forKey: "attributes") else { NSException.raise(NSExceptionName.parseErrorException, format: "Key '%@' not found.", arguments: getVaList(["attributes"])); fatalError() }; self.attributes = attributes
             self.__path = aDecoder.decode(forKey: "__path")
         }
@@ -3742,6 +3754,7 @@ import Foundation
             aCoder.encode(self.parentName, forKey: "parentName")
             aCoder.encode(self.parent, forKey: "parent")
             aCoder.encode(self.supertype, forKey: "supertype")
+            aCoder.encode(self.importDeclarations, forKey: "importDeclarations")
             aCoder.encode(self.attributes, forKey: "attributes")
             aCoder.encode(self.__path, forKey: "__path")
         }
