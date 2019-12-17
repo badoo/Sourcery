@@ -24,6 +24,7 @@ import Foundation
                          typealiases: [Typealias] = [],
                          attributes: [String: Attribute] = [:],
                          annotations: [String: NSObject] = [:],
+                         importDeclarations: [String] = [],
                          isGeneric: Bool = false) {
         super.init(
             name: name,
@@ -37,6 +38,7 @@ import Foundation
             containedTypes: containedTypes,
             typealiases: typealiases,
             annotations: annotations,
+            importDeclarations: importDeclarations,
             isGeneric: isGeneric
         )
     }

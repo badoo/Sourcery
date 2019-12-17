@@ -54,6 +54,7 @@ public final class FileParser {
 
     fileprivate var contents: String!
     fileprivate var annotations: AnnotationsParser!
+    fileprivate var imports: ImportDeclarationsParser!
     fileprivate var inlineRanges: [String: NSRange]!
     fileprivate var inlineIndentations: [String: String]!
 
@@ -91,6 +92,10 @@ public final class FileParser {
         return contents
     }
 
+    private func parseSyntaxMap(_ syntaxMap: SyntaxMap) {
+        imports = ImportDeclarationsParser(contents: contents, tokens: syntaxMap.tokens)
+    }
+
     /// Parses given file context.
     ///
     /// - Returns: All types we could find.
@@ -101,8 +106,11 @@ public final class FileParser {
             Log.verbose("Processing file \(path)")
         }
         let file = File(contents: contents)
-        let source = try Structure(file: file).dictionary
 
+        let syntaxMap = try SyntaxMap(file: file)
+        parseSyntaxMap(syntaxMap)
+
+        let source = try Structure(file: file).dictionary
         let (types, typealiases) = try parseTypes(source)
         return FileParserResult(path: path, module: module, types: types, typealiases: typealiases, inlineRanges: inlineRanges, inlineIndentations: inlineIndentations, modifiedDate: modifiedDate ?? Date(), sourceryVersion: SourceryVersion.current.value)
     }
@@ -157,6 +165,7 @@ public final class FileParser {
 
             type.isGeneric = isGeneric(source: source)
             type.annotations = annotations.from(source)
+            type.importDeclarations = imports.declarationsDescriptions
             type.attributes = parseDeclarationAttributes(source)
             type.bodyBytesRange = Substring.body.range(for: source).map { BytesRange(range: $0) }
             type.setSource(source)
