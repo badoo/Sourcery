@@ -92,7 +92,7 @@ public final class FileParser {
         return contents
     }
 
-    public func parseSyntaxMap(_ syntaxMap: SyntaxMap) {
+    private func parseSyntaxMap(_ syntaxMap: SyntaxMap) {
         imports = ImportDeclarationsParser(contents: contents, tokens: syntaxMap.tokens)
     }
 
