@@ -207,6 +207,30 @@ class FileParserMethodsSpec: QuickSpec {
                     }
                 }
 
+                context("given conditional compilation statement") {
+                    func parse(_ code: String) -> [Type] {
+                        guard let parserResult = try? FileParser(contents: code).parse() else { fail(); return [] }
+                        return Composer.uniqueTypes(parserResult)
+                    }
+
+                    it("extracts protocol methods properly") {
+                        let methods = parse("""
+                        protocol Foo {
+                            func fooVoid();
+                            #if TEST
+                            func fooInOut(some: Int, anotherSome: inout String) }
+                            #endif
+                        }
+                        """)[0].methods
+
+                        expect(methods[0]).to(equal(Method(name: "fooVoid()", selectorName: "fooVoid", returnTypeName: TypeName("Void"), definedInTypeName: TypeName("Foo"))))
+                        expect(methods[1]).to(equal(Method(name: "fooInOut(some: Int, anotherSome: inout String)", selectorName: "fooInOut(some:anotherSome:)", parameters: [
+                            MethodParameter(name: "some", typeName: TypeName("Int")),
+                            MethodParameter(name: "anotherSome", typeName: TypeName("inout String"), isInout: true)
+                        ], returnTypeName: TypeName("Void"), definedInTypeName: TypeName("Foo"))))
+                    }
+                }
+
                 context("given generic method") {
                     func assertMethods(_ types: [Type]) {
                         let foo = types.last?.methods.first

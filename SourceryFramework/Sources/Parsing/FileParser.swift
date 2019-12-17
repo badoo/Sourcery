@@ -551,7 +551,7 @@ extension FileParser {
                     upperBound = Int(range.offset)
                 }
             } else if let definedInSource = definedIn?.__underlyingSource, let range = Substring.key.range(for: definedInSource) {
-                // if there are no fiurther declarations, parse until end of containing declaration
+                // if there are no further declarations, parse until end of containing declaration
                 upperBound = Int(range.offset) + Int(range.length) - 1
             }
 
@@ -567,11 +567,12 @@ extension FileParser {
                     let firstDocToken = tokens?.first(where: {
                         $0.type.hasPrefix("source.lang.swift.syntaxtype.comment")
                             || $0.type.hasPrefix("source.lang.swift.syntaxtype.doccomment")
+                            || $0.type.hasPrefix("source.lang.swift.syntaxtype.buildconfig")
                     })
                     if let firstDocToken = firstDocToken {
                         nameSuffix = nameSuffixUpToNextStruct.bridge()
                             .substringWithByteRange(start: 0, length: firstDocToken.offset)?
-                            .trimmingCharacters(in: CharacterSet(charactersIn: ";").union(.whitespacesAndNewlines))
+                            .trimmingCharacters(in: CharacterSet(charactersIn: ";}").union(.whitespacesAndNewlines))
                     } else {
                         nameSuffix = nameSuffixUpToNextStruct
                     }
