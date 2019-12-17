@@ -100,6 +100,10 @@ class FileParserVariableSpec: QuickSpec {
                         expect(parse("var name = ((1, 2), [1, 2])")?.typeName).to(equal(TypeName("((Int, Int), [Int])")))
                         expect(parse("var name = ((1, 2), [\"a,b\": \"b\"])")?.typeName).to(equal(TypeName("((Int, Int), [String: String])")))
                     }
+
+                    it("extracts properties with conditional compilation statement") {
+                        expect(parse("#if TEST\nvar name = (1, 2)\n#endif")?.typeName).to(equal(TypeName("(Int, Int)")))
+                    }
                 }
 
                 it("extracts standard let property correctly") {

@@ -217,8 +217,8 @@ class FileParserMethodsSpec: QuickSpec {
                         let methods = parse("""
                         protocol Foo {
                             func fooVoid();
-                            #if TEST
-                            func fooInOut(some: Int, anotherSome: inout String) }
+                            #if TEST_FLAG
+                            func fooInOut(some: Int, anotherSome: inout String)
                             #endif
                         }
                         """)[0].methods
