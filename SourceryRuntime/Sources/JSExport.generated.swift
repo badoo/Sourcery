@@ -1,4 +1,4 @@
-// Generated using Sourcery 0.17.0 — https://github.com/krzysztofzablocki/Sourcery
+// Generated using Sourcery 0.18.0 — https://github.com/krzysztofzablocki/Sourcery
 // DO NOT EDIT
 
 // swiftlint:disable vertical_whitespace trailing_newline
@@ -18,6 +18,7 @@ extension ArrayType: ArrayTypeAutoJSExport {}
     var externalName: String? { get }
     var typeName: TypeName { get }
     var type: Type? { get }
+    var defaultValue: String? { get }
     var annotations: [String: NSObject] { get }
     var isOptional: Bool { get }
     var isImplicitlyUnwrappedOptional: Bool { get }
@@ -150,6 +151,7 @@ extension Enum: EnumAutoJSExport {}
     var rawValue: String? { get }
     var associatedValues: [AssociatedValue] { get }
     var annotations: [String: NSObject] { get }
+    var indirect: Bool { get }
     var hasAssociatedValue: Bool { get }
 }
 
@@ -259,6 +261,7 @@ extension MethodParameter: MethodParameterAutoJSExport {}
 extension Protocol: ProtocolAutoJSExport {}
 
 
+
 @objc protocol StructAutoJSExport: JSExport {
     var kind: String { get }
     var module: String? { get }
@@ -318,6 +321,7 @@ extension Struct: StructAutoJSExport {}
 extension Subscript: SubscriptAutoJSExport {}
 
 @objc protocol TemplateContextAutoJSExport: JSExport {
+    var functions: [SourceryMethod] { get }
     var types: Types { get }
     var argument: [String: NSObject] { get }
     var type: [String: Type] { get }
