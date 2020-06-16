@@ -103,12 +103,13 @@ public final class FileParser {
         let file = File(contents: contents)
         let source = try Structure(file: file).dictionary
 
-        let (types, typealiases) = try parseTypes(source)
-        return FileParserResult(path: path, module: module, types: types, typealiases: typealiases, inlineRanges: inlineRanges, inlineIndentations: inlineIndentations, modifiedDate: modifiedDate ?? Date(), sourceryVersion: SourceryVersion.current.value)
+        let (types, functions, typealiases) = try parseTypes(source)
+        return FileParserResult(path: path, module: module, types: types, functions: functions, typealiases: typealiases, inlineRanges: inlineRanges, inlineIndentations: inlineIndentations, modifiedDate: modifiedDate ?? Date(), sourceryVersion: SourceryVersion.current.value)
     }
 
-    internal func parseTypes(_ source: [String: SourceKitRepresentable]) throws -> ([Type], [Typealias]) {
+    internal func parseTypes(_ source: [String: SourceKitRepresentable]) throws -> ([Type], [SourceryMethod], [Typealias]) {
         var types = [Type]()
+        var functions = [SourceryMethod]()
         var typealiases = [Typealias]()
         try walkDeclarations(source: source) { kind, name, access, inheritedTypes, source, definedIn, next in
             let type: Type
@@ -140,16 +141,33 @@ public final class FileParser {
                  .functionMethodInstance,
                  .functionMethodStatic:
                 return parseMethod(source, definedIn: definedIn as? Type, nextStructure: next)
+            case .functionFree:
+                guard let function = parseMethod(source, definedIn: definedIn as? Type, nextStructure: next) else {
+                    return nil
+                }
+
+                functions.append(function)
+                return function
             case .functionSubscript:
                 return parseSubscript(source, definedIn: definedIn as? Type, nextStructure: next)
             case .varParameter:
                 return parseParameter(source)
             case .typealias:
-                guard let `typealias` = parseTypealias(source, containingType: definedIn as? Type) else { return nil }
-                if definedIn == nil {
-                    typealiases.append(`typealias`)
+                switch parseTypealias(source, containingType: definedIn as? Type) {
+                case nil:
+                    return nil
+                case .typealias(let alias)?:
+                    if definedIn == nil {
+                        typealiases.append(alias)
+                    }
+                    return alias
+                case .protocolComposition(let protocolComposition)?:
+                    if definedIn == nil {
+                        type = protocolComposition
+                    } else {
+                        return protocolComposition
+                    }
                 }
-                return `typealias`
             default:
                 Log.verbose("\(logPrefix) Unsupported entry \"\(access) \(kind) \(name)\"")
                 return nil
@@ -165,7 +183,7 @@ public final class FileParser {
             return type
         }
 
-        return (types, typealiases)
+        return (types, functions, typealiases)
     }
 
     typealias FoundEntry = (
@@ -629,6 +647,11 @@ extension FileParser {
             return nil
         }
 
+        var isIndirect: Bool = false
+        if let attributes = source["key.attributes"] as? [[String: SourceKitRepresentable]], let attribute = attributes.first?["key.attribute"] as? String, SwiftDeclarationAttributeKind(rawValue: attribute) == .indirect {
+            isIndirect = true
+        }
+
         let wrappedBody = keyString[nameRange.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
 
         switch (wrappedBody.first, wrappedBody.last) {
@@ -644,7 +667,7 @@ extension FileParser {
              Log.warning("\(logPrefix)parseEnumCase: Unknown enum case body format \(wrappedBody)")
         }
 
-        let enumCase = EnumCase(name: name, rawValue: rawValue, associatedValues: associatedValues, annotations: annotations.from(source))
+        let enumCase = EnumCase(name: name, rawValue: rawValue, associatedValues: associatedValues, annotations: annotations.from(source), indirect: isIndirect)
         enumCase.setSource(source)
         return enumCase
     }
@@ -665,24 +688,27 @@ extension FileParser {
         return items
             .map({ $0.trimmingCharacters(in: .whitespacesAndNewlines) })
             .enumerated()
-            .map { index, body in
-                let annotations = AnnotationsParser(contents: body).all
-                let body = body.strippingComments()
+            .map { index, rawBody in
+                let annotations = AnnotationsParser(contents: rawBody).all
+                let noCommentsBody = rawBody.strippingComments()
+                let defaultValue = extractAssociatedValueDefaultValue(type: noCommentsBody)
+                let body = noCommentsBody
+                    .strippingDefaultValues()
                 let nameAndType = body.colonSeparated().map({ $0.trimmingCharacters(in: .whitespaces) })
                 let defaultName: String? = index == 0 && items.count == 1 ? nil : "\(index)"
 
                 guard nameAndType.count == 2 else {
                     let typeName = TypeName(body, attributes: parseTypeAttributes(body))
-                    return AssociatedValue(localName: nil, externalName: defaultName, typeName: typeName, annotations: annotations)
+                    return AssociatedValue(localName: nil, externalName: defaultName, typeName: typeName, defaultValue: defaultValue, annotations: annotations)
                 }
                 guard nameAndType[0] != "_" else {
                     let typeName = TypeName(nameAndType[1], attributes: parseTypeAttributes(nameAndType[1]))
-                    return AssociatedValue(localName: nil, externalName: defaultName, typeName: typeName, annotations: annotations)
+                    return AssociatedValue(localName: nil, externalName: defaultName, typeName: typeName, defaultValue: defaultValue, annotations: annotations)
                 }
                 let localName = nameAndType[0]
                 let externalName = items.count > 1 ? localName : defaultName
                 let typeName = TypeName(nameAndType[1], attributes: parseTypeAttributes(nameAndType[1]))
-                return AssociatedValue(localName: localName, externalName: externalName, typeName: typeName, annotations: annotations)
+                return AssociatedValue(localName: localName, externalName: externalName, typeName: typeName, defaultValue: defaultValue, annotations: annotations)
         }
     }
 
@@ -691,13 +717,28 @@ extension FileParser {
 // MARK: - Typealiases
 extension FileParser {
 
-    fileprivate func parseTypealias(_ source: [String: SourceKitRepresentable], containingType: Type?) -> Typealias? {
+    private enum TypealiasParseOutcome {
+        case `typealias`(Typealias)
+        case protocolComposition(ProtocolComposition)
+    }
+
+    private func parseTypealias(_ source: [String: SourceKitRepresentable], containingType: Type?) -> TypealiasParseOutcome? {
         guard let (name, _, _) = parseTypeRequirements(source),
             let nameSuffix = extract(.nameSuffix, from: source)?
                 .trimmingCharacters(in: CharacterSet.init(charactersIn: "=").union(.whitespacesAndNewlines))
             else { return nil }
 
-        return Typealias(aliasName: name, typeName: TypeName(nameSuffix), parent: containingType)
+        if case let components = nameSuffix.components(separatedBy: CharacterSet.init(charactersIn: "&")),
+        components.count > 1 {
+            let suffixes = components.map { source in
+                source.trimmingCharacters(in: CharacterSet.init(charactersIn: "=").union(.whitespacesAndNewlines))
+            }
+            let composedTypeNames = suffixes.map(TypeName.init(_:))
+            let inheritedTypes = composedTypeNames.map { $0.name }
+            return .protocolComposition(ProtocolComposition(name: name, parent: containingType, inheritedTypes: inheritedTypes, composedTypeNames: composedTypeNames))
+        }
+
+        return .typealias(Typealias(aliasName: name, typeName: TypeName(nameSuffix), parent: containingType))
     }
 
 }
@@ -832,6 +873,14 @@ extension FileParser {
         guard nameSuffix.trimPrefix("=") else { return nil }
         return nameSuffix.trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    fileprivate func extractAssociatedValueDefaultValue(type: String) -> String? {
+        if let defaultValueRange = type.range(of: "=") {
+            return String(type[defaultValueRange.upperBound ..< type.endIndex]).trimmingCharacters(in: .whitespaces)
+        } else {
+            return nil
+        }
+    }
 }
 
 extension String {
@@ -854,6 +903,14 @@ extension String {
         } while !finished
 
         return stripped
+    }
+
+    func strippingDefaultValues() -> String {
+        if let defaultValueRange = self.range(of: "=") {
+            return String(self[self.startIndex ..< defaultValueRange.lowerBound]).trimmingCharacters(in: .whitespaces)
+        } else {
+            return self
+        }
     }
 
 }
