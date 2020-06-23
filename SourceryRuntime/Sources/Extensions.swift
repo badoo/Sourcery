@@ -96,7 +96,7 @@ public extension String {
 
     /// :nodoc:
     func isValidClosureName() -> Bool {
-        return components(separatedBy: "->", excludingDelimiterBetween: ("(", ")")).count > 1
+        return components(separatedBy: "->", excludingDelimiterBetween: (["(", "<"], [")", ">"])).count > 1
     }
 
     /// :nodoc:
@@ -139,7 +139,6 @@ public extension String {
         var quotesCount: Int = 0
         var item = ""
         var items = [String]()
-        var matchedDelimiter = (alreadyMatched: "", leftToMatch: delimiter)
 
         var i = self.startIndex
         while i < self.endIndex {
