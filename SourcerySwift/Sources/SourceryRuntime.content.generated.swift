@@ -3426,7 +3426,7 @@ extension ProcessInfo {
     /// :nodoc:
     public lazy internal(set) var typesByName: [String: Type] = {
         var typesByName = [String: Type]()
-        self.types.forEach { typesByName[$0.name] = $0 }
+        self.types.forEach { typesByName[$0.globalName] = $0 }
         return typesByName
     }()
 
@@ -3593,6 +3593,9 @@ import Foundation
     /// :nodoc:
     public var module: String?
 
+    /// :nodoc:
+    public var imports: [String] = []
+
     // All local typealiases
     // sourcery: skipJSExport
     /// :nodoc:
@@ -3620,7 +3623,8 @@ import Foundation
     }
 
     // sourcery: skipDescription
-    var globalName: String {
+    /// Global type name including module name
+    public var globalName: String {
         guard let module = module else { return name }
         return "\\(module).\\(name)"
     }
@@ -4006,10 +4010,16 @@ public protocol Typed {
         } else {
             name = name.bracketsBalancing()
             name = name.trimmingPrefix("inout ").trimmingCharacters(in: .whitespacesAndNewlines)
-            let isImplicitlyUnwrappedOptional = name.hasSuffix("!") || name.hasPrefix("ImplicitlyUnwrappedOptional<")
-            let isOptional = name.hasSuffix("?") || name.hasPrefix("Optional<") || isImplicitlyUnwrappedOptional
-            self.isImplicitlyUnwrappedOptional = isImplicitlyUnwrappedOptional
-            self.isOptional = isOptional
+
+            if name.isValidClosureName() {
+                let isImplicitlyUnwrappedOptional = name.hasPrefix("ImplicitlyUnwrappedOptional<") && name.hasSuffix(">")
+                self.isImplicitlyUnwrappedOptional = isImplicitlyUnwrappedOptional
+                self.isOptional = (name.hasPrefix("Optional<")  && name.hasSuffix(">")) || isImplicitlyUnwrappedOptional
+            } else {
+                let isImplicitlyUnwrappedOptional = name.hasSuffix("!") || name.hasPrefix("ImplicitlyUnwrappedOptional<")
+                self.isImplicitlyUnwrappedOptional = isImplicitlyUnwrappedOptional
+                self.isOptional = name.hasSuffix("?") || name.hasPrefix("Optional<") || isImplicitlyUnwrappedOptional
+            }
 
             var unwrappedTypeName: String
 
